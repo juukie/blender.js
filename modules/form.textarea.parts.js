@@ -154,6 +154,13 @@ var translate = require("./interface.translations.js");
                 dataColumns.push(dataColumn);
             }
 
+            dataColumns.push({
+                "data": null,
+                "class": "-right",
+                "sortable": false,
+                "defaultContent": "<a href='#' data-options class='button -small'><span class='fa fa-pencil'></span></a>"
+            });
+
             // Add delete column as last
             if(!parts.options.readOnly){
                 dataColumns.push({
@@ -217,6 +224,12 @@ var translate = require("./interface.translations.js");
                     .on('click', 'a[data-delete]', function (e) {
                         e.preventDefault();
                         deleteRow(parts, $(this).closest('tr')[0]);
+                        return false;
+                    })
+                    // init options btn for entire table
+                    .on('click', 'a[data-options]', function (e) {
+                        e.preventDefault();
+                        showOptionsForRow(parts, $(this).closest('tr')[0]);
                         return false;
                     })
                     // no returns on edit field
@@ -291,6 +304,10 @@ var translate = require("./interface.translations.js");
 
             return false;
 
+        }
+
+        function showOptionsForRow(parts, row) {
+            console.log('zeofnozenfojzen');
         }
 
         function initEditableCells(parts) {
@@ -598,9 +615,3 @@ var translate = require("./interface.translations.js");
 
     // Register parts component
     $('textarea[data-parts]').parts();
-
-
-
-
-
-
