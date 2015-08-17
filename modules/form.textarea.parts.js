@@ -307,7 +307,77 @@ var translate = require("./interface.translations.js");
         }
 
         function showOptionsForRow(parts, row) {
-            console.log('zeofnozenfojzen');
+
+            $('#images').css('height', 200);
+
+            // Retreive the image object from the parts data
+            var imageId = parseInt($(row).attr('id'));
+
+            var image = $.grep(parts.options.dataTableOptions.data, function(image) {
+                return image.id === imageId;
+            })[0];
+
+            // Initialize the cropper, this happens on an img element
+            var $cropper = $('#media-options-img');
+
+            $cropper
+                .attr('src', '/media/'+image.id+'/'+image.file_name)
+                .cropper({
+                    aspectRatio: 4/3,
+                    autoCropArea: 1,
+                    strict: true,
+                    guides: false,
+                    highlight: false,
+                    dragCrop: true,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    zoomable: false
+                });
+
+            // Determine the image's original dimensions
+            var originalDimensions;
+
+            $('<img/>')
+                .attr('src', $cropper.attr('src'))
+                .on('load', function() {
+                    originalDimensions = {
+                        width: this.width,
+                        height: this.height
+                    }
+                });
+
+            // Crop confirm event; destroy the cropper and set the image manipulations
+            $('#media-options-confirm')
+                .on('click', function(e) {
+                    e.preventDefault();
+
+                    setImageManipulationsFromCrop(
+                        parts,
+                        image,
+                        $cropper.cropper('getCropBoxData'),
+                        $cropper.cropper('getCanvasData'),
+                        originalDimensions
+                    );
+
+                    $cropper.cropper('destroy');
+                });
+        }
+
+        function setImageManipulationsFromCrop(parts, data, cropData, canvasData, originalDimensions) {
+            var scale = canvasData.width / originalDimensions.width;
+
+            var manipulations = {
+                rectangle: {
+                    left: Math.round(cropData.left * scale),
+                    top: Math.round(cropData.top * scale),
+                    width: Math.round(cropData.width * scale), // Should be a fixed value
+                    height: Math.round(cropData.height * scale) // Should be a fixed value
+                }
+            };
+
+            data.manipulations.push(manipulations);
+
+            updateTextarea(parts);
         }
 
         function initEditableCells(parts) {
