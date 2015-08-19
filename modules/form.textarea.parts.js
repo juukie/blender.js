@@ -1,6 +1,7 @@
 var $ = require('jquery');
-require("jquery-ui");
-require("jquery-confirm");
+require('jquery-ui');
+require('jquery-confirm');
+require('jquery-modal');
 require('datatables');
 
 require('blueimp-file-upload/js/jquery.iframe-transport.js');
