@@ -43,7 +43,7 @@ var translate = require("./interface.translations.js");
             //return this for chaining
             return this;
 
-        })
+        });
 
 
 //------------------------------------------------------------------------------------ construct functions
@@ -307,18 +307,76 @@ var translate = require("./interface.translations.js");
         }
 
         function showOptionsForRow(parts, row) {
+            // Bootstrap and display the image editor element.
+            var $imageEditor = initializeImageEditor();
 
-            $('#images').css('height', 200);
-
-            // Retreive the image object from the parts data
+            // Retrieve the image object from the parts data.
             var imageId = parseInt($(row).attr('id'));
 
+            // Pluck the image data from the DataTable data.
             var image = $.grep(parts.options.dataTableOptions.data, function(image) {
                 return image.id === imageId;
             })[0];
 
-            // Initialize the cropper, this happens on an img element
-            var $cropper = $('#media-options-img');
+            // Initialize the cropper, this happens on an img element.
+            var $cropper = initializeCropper(image);
+
+            // Determine the image's original dimensions.
+            var originalDimensions;
+            $('<img/>')
+                .attr('src', $cropper.attr('src'))
+                .on('load', function() {
+                    originalDimensions = {
+                        width: this.width,
+                        height: this.height
+                    }
+                });
+
+            // Editor confirm event.
+            $('#media-options-confirm')
+                .on('click', function(e) {
+                    e.preventDefault();
+
+                    // Unlikely to happen, this would mean you'd have hit confirm before the original dimensions
+                    // were retrieved.
+                    if (typeof originalDimensions === 'undefined') {
+                        return;
+                    }
+
+                    setImageManipulationsFromCrop(
+                        parts,
+                        image,
+                        $cropper.cropper('getCropBoxData'),
+                        $cropper.cropper('getCanvasData'),
+                        originalDimensions
+                    );
+
+                    closeImageEditor();
+                });
+
+            // Editor cancel event.
+            $('#media-options-cancel')
+                .on('click', function(e) {
+                    e.preventDefault();
+                    closeImageEditor();
+                });
+        }
+
+        function initializeImageEditor() {
+            var $imageEditor = $('#image-editor');
+
+            $imageEditor.show();
+
+            return $imageEditor;
+        }
+
+        function closeImageEditor() {
+            $cropper.cropper('destroy').attr('src', '');
+            $imageEditor.hide();
+        }
+
+        function initializeCropper(image) {
+            var $cropper = $('#image-editor-img');
 
             $cropper
                 .attr('src', '/media/'+image.id+'/'+image.file_name)
@@ -334,45 +392,19 @@ var translate = require("./interface.translations.js");
                     zoomable: false
                 });
 
-            // Determine the image's original dimensions
-            var originalDimensions;
-
-            $('<img/>')
-                .attr('src', $cropper.attr('src'))
-                .on('load', function() {
-                    originalDimensions = {
-                        width: this.width,
-                        height: this.height
-                    }
-                });
-
-            // Crop confirm event; destroy the cropper and set the image manipulations
-            $('#media-options-confirm')
-                .on('click', function(e) {
-                    e.preventDefault();
-
-                    setImageManipulationsFromCrop(
-                        parts,
-                        image,
-                        $cropper.cropper('getCropBoxData'),
-                        $cropper.cropper('getCanvasData'),
-                        originalDimensions
-                    );
-
-                    $cropper.cropper('destroy');
-                });
+            return $cropper;
         }
 
         function setImageManipulationsFromCrop(parts, data, cropData, canvasData, originalDimensions) {
             var scale = canvasData.width / originalDimensions.width;
 
             var manipulations = {
-                rectangle: {
-                    left: Math.round(cropData.left * scale),
-                    top: Math.round(cropData.top * scale),
-                    width: Math.round(cropData.width * scale), // Should be a fixed value
-                    height: Math.round(cropData.height * scale) // Should be a fixed value
-                }
+                rect: [
+                    Math.round(cropData.width * scale), // Width, Todo: Should be a fixed value
+                    Math.round(cropData.height * scale), // Height, Todo: Should be a fixed value
+                    Math.round(cropData.left * scale), // X
+                    Math.round(cropData.top * scale) // Y
+                ]
             };
 
             data.manipulations.push(manipulations);
