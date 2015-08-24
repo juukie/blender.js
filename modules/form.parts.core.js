@@ -66,7 +66,7 @@ var __ = {
             if(column.media=='image'){
                 dataColumn.class = 'part_thumb -'+column.media;
                 dataColumn.render = function(data, type, full) {
-                    return __.renderImage(data, full);
+                    return __.util.renderImage(data, full);
                 }
             }
             //downloads
@@ -76,7 +76,7 @@ var __ = {
                     //if image download: render as image
                     var thumbExtensions = ['pdf', 'jpg', 'png'];
                     if(thumbExtensions.indexOf(full.file_name.split('.').pop()) != -1){
-                        return __.renderImage(data, full);
+                        return __.util.renderImage(data, full);
                     }
                     else{
                         var mediaRoot = '/media/' + full.id ;
@@ -116,7 +116,7 @@ var __ = {
         // Gather dataTable options
         parts.options.dataTableOptions.data = data;
         parts.options.dataTableOptions.columns = columns;
-        parts.options.dataTableOptions.drawCallback = function() { __.initEditableCells(parts); };
+        parts.options.dataTableOptions.drawCallback = function() { __.table.initEditableCells(parts); };
         parts.options.dataTableOptions.paginate = false;
         parts.options.dataTableOptions.sort = false;
 
@@ -125,10 +125,10 @@ var __ = {
         parts.$table.DataTable(parts.options.dataTableOptions);
 
         // Sort rows?
-        __.makeRowsSortable(parts);
+        __.table.makeRowsSortable(parts);
 
         // edit and delete
-        __.makeRowsInteraction(parts);
+        __.table.makeRowsInteraction(parts);
     }
 }
 

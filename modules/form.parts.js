@@ -14,7 +14,7 @@ $.fn.parts = function(options) {
         var parts = __.constructObjectWithOptions($(this));
 
         // Populate initial data
-        var partData = __.parseFormJson(parts);
+        var partData = __.util.parseFormJson(parts);
 
         // read column settings, convert for datatables
         var partColumns = __.constructColumns(parts);
@@ -25,12 +25,12 @@ $.fn.parts = function(options) {
 
         //-----------------------------------------------init uploads for adding new rows
         if (parts.options.upload != undefined && !parts.options.readOnly) {
-            __.enableUpload(parts);
+            __.upload.enableUpload(parts);
         }
 
         //-----------------------------------------------init adding new rows
         if (parts.options.autocomplete != undefined && !parts.options.readOnly) {
-            __.enableInsert(parts);
+            __.table.enableInsert(parts);
         }
 
         //return this for chaining
