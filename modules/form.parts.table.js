@@ -112,8 +112,6 @@ __.deleteRow = function(parts, row)  {
 }
 
 __.showOptionsForRow = function(parts, row)  {
-    // Bootstrap and display the image editor element.
-    var $imageEditor = __.initializeImageEditor();
 
     // Retrieve the image object from the parts data.
     var imageId = parseInt($(row).attr('id'));
@@ -123,48 +121,8 @@ __.showOptionsForRow = function(parts, row)  {
         return image.id === imageId;
     })[0];
 
-    // Initialize the cropper, this happens on an img element.
-    var $cropper = __.initializeCropper(image);
-
-    // Determine the image's original dimensions.
-    var originalDimensions;
-    $('<img/>')
-        .attr('src', $cropper.attr('src'))
-        .on('load', function() {
-            originalDimensions = {
-                width: this.width,
-                height: this.height
-            }
-        });
-
-    // Editor confirm event.
-    $('#media-options-confirm')
-        .on('click', function(e) {
-            e.preventDefault();
-
-            // Unlikely to happen, this would mean you'd have hit confirm before the original dimensions
-            // were retrieved.
-            if (typeof originalDimensions === 'undefined') {
-                return;
-            }
-
-            __.setImageManipulationsFromCrop(
-                parts,
-                image,
-                $cropper.cropper('getCropBoxData'),
-                $cropper.cropper('getCanvasData'),
-                originalDimensions
-            );
-
-            __.closeImageEditor($cropper, $imageEditor);
-        });
-
-    // Editor cancel event.
-    $('#media-options-cancel')
-        .on('click', function(e) {
-            e.preventDefault();
-            __.closeImageEditor($cropper, $imageEditor);
-        });
+    // Bootstrap and display the image editor element.
+    __.initializeImageEditor(parts, image);
 }
 
 __.initEditableCells = function(parts)  {
