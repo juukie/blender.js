@@ -16,27 +16,27 @@ $.fn.parts = function(options) {
         // Populate initial data
         var partData = __.util.parseFormJson(parts);
 
-        // read column settings, convert for datatables
+        // Read column settings and convert them for datatables
         var partColumns = __.constructColumns(parts);
 
-        //init Datatable
+        // Initialize the datatable
         __.initDataTable(parts, partData, partColumns);
 
 
-        //-----------------------------------------------init uploads for adding new rows
+        // Initialize uploads for adding new rows
         if (parts.options.upload != undefined && !parts.options.readOnly) {
             __.upload.enableUpload(parts);
         }
 
-        //-----------------------------------------------init adding new rows
+        // Initialize adding new rows
         if (parts.options.autocomplete != undefined && !parts.options.readOnly) {
             __.table.enableInsert(parts);
         }
 
-        //return this for chaining
+        // Return `this` for chaining
         return this;
     });
-};
+}
 
 // Register parts component
 $('textarea[data-parts]').parts();
