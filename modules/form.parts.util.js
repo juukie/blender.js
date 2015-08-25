@@ -2,8 +2,8 @@ var $ = require('jquery');
 var translate = require('./interface.translations.js');
 var __ = require('./form.parts.core.js');
 
-__.util = {
-    
+var self = __.util = {
+
     parseFormJson: function(parts) {
 
         // Get textarea source. Result is an array of part objects

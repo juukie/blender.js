@@ -4,14 +4,12 @@ var __ = require('./form.parts.core.js');
 require('cropper');
 require('jquery-modal');
 
-__.imageeditor = {
+var self = __.imageeditor = {
 
     initializeImageEditor: function(parts, image) {
 
-        var $imageEditor = $('#image-editor');
-
         if (image.custom_properties.hasOwnProperty('metadata')) {
-            $imageEditor.addClass('-has-metadata');
+            imageEditor.editor.addClass('-has-metadata');
         }
 
         // Get the image's path
@@ -21,30 +19,49 @@ __.imageeditor = {
         $('#image-editor-title')
             .text(translate('parts.editImage') + ': ' + image.name);
 
-        // Determine the image's original dimensions.
-        var originalDimensions;
+        var $progressCursor = $('<style />')
+            .html('* { cursor: progress !important; }')
+            .appendTo('body:first');
+
+        var originalDimensions = $.Deferred()
+            .done(function(dimensions) {
+                self.renderImageEditor(src, dimensions);
+            })
+            .always(function(dimensions) {
+                $progressCursor.remove();
+                self.renderImageEditor(src, dimensions);
+            });
+
         $('<img/>')
             .attr('src', src)
             .on('load', function() {
-                originalDimensions = {
+                originalDimensions.resolve({
                     width: this.width,
                     height: this.height
-                }
+                });
+            })
+            .on('error', function() {
+                originalDimensions.reject();
             });
+    },
+
+    renderImageEditor: function(src, originalDimensions) {
+
+        var $editor = $('#image-editor');
 
         // Display the editor
-        $imageEditor
+        $editor
+            .on($.modal.BEFORE_CLOSE, function() {
+                self.closeImageEditor();
+            })
             .modal({
                 showClose: false,
                 opacity: 0.85,
                 zIndex: 99999
-            })
-            .on($.modal.BEFORE_CLOSE, function() {
-                __.imageeditor.closeImageEditor();
             });
 
         // Initialize the cropper, this happens on an img element.
-        var $cropper = __.imageeditor.initializeCropper(src);
+        var $cropper = self.initializeCropper(src);
 
         // Editor confirm event.
         $('#media-options-confirm')
@@ -57,7 +74,7 @@ __.imageeditor = {
                     return;
                 }
 
-                __.imageeditor.setImageManipulationsFromCrop(
+                self.setImageManipulationsFromCrop(
                     parts,
                     image,
                     $cropper.cropper('getCropBoxData'),
@@ -82,8 +99,8 @@ __.imageeditor = {
         $cropper
             .attr('src', src)
             .cropper({
-                aspectRatio: 4/3,
-                autoCropArea: 1,
+                aspectRatio: 3/2,
+                autoCropArea: .75,
                 strict: true,
                 guides: false,
                 highlight: false,

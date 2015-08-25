@@ -4,7 +4,7 @@ var __ = require('./form.parts.core.js');
 require('datatables');
 require('jquery-confirm');
 
-__.table = {
+var self = __.table = {
     makeRowsSortable: function(parts) {
 
         if(parts.options.orderRows && !parts.options.readOnly){
@@ -15,7 +15,7 @@ __.table = {
                 cancel:  '.dataTables_empty',
                 containment: "parent",
                 stop: function () {
-                    __.table.updateTextarea(parts);
+                    self.updateTextarea(parts);
                 },
                 handle: "td:not('.-edit')" //no drag behaviour on these cells
             })
@@ -30,13 +30,13 @@ __.table = {
                 // init delete btn for entire table
                 .on('click', 'a[data-delete]', function (e) {
                     e.preventDefault();
-                    __.table.deleteRow(parts, $(this).closest('tr')[0]);
+                    self.deleteRow(parts, $(this).closest('tr')[0]);
                     return false;
                 })
                 // init options btn for entire table
                 .on('click', 'a[data-options]', function (e) {
                     e.preventDefault();
-                    __.table.showOptionsForRow(parts, $(this).closest('tr')[0]);
+                    self.showOptionsForRow(parts, $(this).closest('tr')[0]);
                     return false;
                 })
                 // no returns on edit field
@@ -48,7 +48,7 @@ __.table = {
 
     updateTextarea: function(parts)  {
 
-        var sortedData = __.table.calculateRowOrder(parts);
+        var sortedData = self.calculateRowOrder(parts);
 
         //read column settings, convert for datatables
         parts.$textArea.val(JSON.stringify(sortedData));
@@ -88,7 +88,7 @@ __.table = {
         $(row).addClass('-added');
 
         __.util.writeAlert(label + ' ' + translate('parts.added'), 'info', parts.$addPartAlerts);
-        __.table.updateTextarea(parts);
+        self.updateTextarea(parts);
     },
 
     deleteRow: function(parts, row)  {
@@ -104,7 +104,7 @@ __.table = {
             cancelButtonClass: 'button -gray',
             confirm: function(){
                 parts.$table.DataTable().rows(row).remove().draw();
-                __.table.updateTextarea(parts);
+                self.updateTextarea(parts);
             }
         });
 
@@ -150,7 +150,7 @@ __.table = {
                         return $this ;
                     }
 
-                    __.table.updateCell(this, parts)
+                    self.updateCell(this, parts)
                 }
                 return $this;
             });
@@ -164,7 +164,7 @@ __.table = {
         parts.$table.DataTable().cell(cell).data( $(cell).text() );
 
         //push changes to textarea
-        __.table.updateTextarea(parts);
+        self.updateTextarea(parts);
     },
 
     enableInsert: function(parts) {
@@ -191,7 +191,7 @@ __.table = {
                 //set ID for row
                 rowObj.DT_RowId = ui.item.value.id;
 
-                __.table.addRow(parts, rowObj, ui.item.label);
+                self.addRow(parts, rowObj, ui.item.label);
 
                 event.preventDefault();
                 return false;

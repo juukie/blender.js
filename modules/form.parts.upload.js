@@ -7,15 +7,15 @@ require('blueimp-file-upload/js/jquery.fileupload-validate.js');
 require('blueimp-file-upload/js/jquery.iframe-transport.js');
 require('jquery-ui');
 
-__.upload = {
+var self = __.upload = {
 
     enableUpload: function(parts) {
 
-        __.upload.constructUploadField(parts);
+        self.constructUploadField(parts);
 
-        var dropZone = __.upload.enableDropZone(parts);
+        var dropZone = self.enableDropZone(parts);
 
-        var uploadOptions = __.upload.constructUploadOptions(parts, dropZone);
+        var uploadOptions = self.constructUploadOptions(parts, dropZone);
 
         // clear errors
         parts.$uploadField.on('click',function(e){
@@ -134,7 +134,7 @@ __.upload = {
 
                 var row = parts.$table.DataTable().row.add(rowObj).draw().node();
                 $(row).addClass('-added');
-                
+
                 __.table.updateTextarea(parts);
             }
         }
