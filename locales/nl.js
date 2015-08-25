@@ -27,7 +27,8 @@ var ß = require("../blender.js");
             "maxFileSize": "Bestand is te groot",
             "minFileSize": "Bestand is te klein",
             "fail": "Er liep iets mis bij de verwerking"
-        }
+        },
+        "editImage": "Afbeelding bewerken"
     },
     "locationpicker": {
         markerText: "Sleep om te verplaatsen",
