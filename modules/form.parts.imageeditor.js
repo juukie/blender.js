@@ -8,44 +8,44 @@ var self = __.imageeditor = {
 
     initializeImageEditor: function(parts, image) {
 
-        if (image.custom_properties.hasOwnProperty('metadata')) {
-            imageEditor.editor.addClass('-has-metadata');
-        }
+        // if (image.custom_properties.hasOwnProperty('metadata')) {
+        //     imageEditor.editor.addClass('-has-metadata');
+        // }
 
         // Get the image's path
         var src = '/media/'+image.id+'/'+image.file_name;
 
         // Set the editor title
         $('#image-editor-title')
-            .text(translate('parts.editImage') + ': ' + image.name);
+            .text(translate('parts.editImage') + ': ' + image.name)
+        ;
 
         var $progressCursor = $('<style />')
             .html('* { cursor: progress !important; }')
-            .appendTo('body:first');
+            .appendTo('body')
+        ;
 
-        var originalDimensions = $.Deferred()
-            .done(function(dimensions) {
-                self.renderImageEditor(src, dimensions);
+        var img = $.Deferred()
+            .done(function(originalWidth) {
+                self.renderImageEditor(parts, image, src, image.crop, originalWidth);
             })
-            .always(function(dimensions) {
+            .always(function() {
                 $progressCursor.remove();
-                self.renderImageEditor(src, dimensions);
-            });
+            })
+        ;
 
         $('<img/>')
             .attr('src', src)
             .on('load', function() {
-                originalDimensions.resolve({
-                    width: this.width,
-                    height: this.height
-                });
+                img.resolve();
             })
             .on('error', function() {
-                originalDimensions.reject();
-            });
+                img.reject();
+            })
+        ;
     },
 
-    renderImageEditor: function(src, originalDimensions) {
+    renderImageEditor: function(parts, image, src, currentCrop, originalWidth) {
 
         var $editor = $('#image-editor');
 
@@ -61,27 +61,19 @@ var self = __.imageeditor = {
             });
 
         // Initialize the cropper, this happens on an img element.
-        var $cropper = self.initializeCropper(src);
+        var $cropper = self.initializeCropper(src, currentCrop);
 
         // Editor confirm event.
         $('#media-options-confirm')
             .on('click', function(e) {
                 e.preventDefault();
 
-                // Unlikely to happen, this would mean you'd have hit confirm before the original dimensions
-                // were retrieved.
-                if (typeof originalDimensions === 'undefined') {
-                    return;
-                }
-
-                self.setImageManipulationsFromCrop(
-                    parts,
-                    image,
-                    $cropper.cropper('getCropBoxData'),
-                    $cropper.cropper('getCanvasData'),
-                    originalDimensions
+                image.crop = self.calculateImageCrop(
+                    $cropper.cropper('getData'),
+                    $cropper.cropper('getCanvasData')
                 );
 
+                __.table.updateTextarea(parts);
                 $.modal.close();
             });
 
@@ -93,44 +85,62 @@ var self = __.imageeditor = {
             });
     },
 
-    initializeCropper: function(src) {
+    initializeCropper: function(src, currentCrop) {
         var $cropper = $('#image-editor-img');
+
+        var options = {
+            aspectRatio: 3/2,
+            autoCropArea: .8,
+            strict: true,
+            guides: false,
+            highlight: false,
+            dragCrop: true,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            zoomable: false,
+            rotatable: false
+        };
 
         $cropper
             .attr('src', src)
-            .cropper({
-                aspectRatio: 3/2,
-                autoCropArea: .75,
-                strict: true,
-                guides: false,
-                highlight: false,
-                dragCrop: true,
-                cropBoxMovable: true,
-                cropBoxResizable: true,
-                zoomable: false
-            });
+            .on('build.cropper', function() {
+                $cropper.parent().css('opacity', 0);
+            })
+            .on('built.cropper', function() {
+                var canvasData = $cropper.cropper('getCanvasData');
+
+                if (currentCrop !== null) {
+                    $cropper.cropper('setData', {
+                       x: currentCrop.x * canvasData.width,
+                       y: currentCrop.y * canvasData.height,
+                       width: currentCrop.width * canvasData.width,
+                    });
+                }
+
+                $cropper.parent().css('opacity', 1);
+            })
+            .cropper(options)
+        ;
 
         return $cropper;
     },
 
     closeImageEditor: function() {
+        // Unbind events from persistent elements
+        $('#media-options-confirm').off('click');
+        $('#media-options-cancel').off('click');
+
+        // Destroy the cropper
         $('#image-editor-img').cropper('destroy').attr('src', '');
     },
 
-    setImageManipulationsFromCrop: function(parts, data, cropData, canvasData, originalDimensions) {
-        var scale = canvasData.width / originalDimensions.width;
+    calculateImageCrop: function(cropData, canvasData) {
 
-        var manipulations = {
-            rect: [
-                Math.round(cropData.width * scale), // Width, Todo: Should be a fixed value
-                Math.round(cropData.height * scale), // Height, Todo: Should be a fixed value
-                Math.round(cropData.left * scale), // X
-                Math.round(cropData.top * scale) // Y
-            ]
-        };
-
-        data.manipulations.push(manipulations);
-
-        __.table.updateTextarea(parts);
+        return {
+            width: cropData.width / canvasData.width,
+            height: cropData.height / canvasData.height,
+            x: cropData.x / canvasData.width,
+            y: cropData.y / canvasData.height
+        }
     }
 }
